@@ -1,0 +1,36 @@
+---
+- name: Require a Debian-family host
+  ansible.builtin.assert:
+    that: ansible_facts.os_family == 'Debian'
+    fail_msg: unattended_upgrades currently supports Debian-family hosts only.
+
+- name: Install unattended-upgrades
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Enable periodic package-list updates and unattended upgrades
+  ansible.builtin.template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+
+- name: Configure unattended-upgrades reboot policy
+  ansible.builtin.template:
+    src: 52unattended-upgrades-math.j2
+    dest: /etc/apt/apt.conf.d/52unattended-upgrades-math
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+
+- name: Enable the unattended-upgrades timer
+  ansible.builtin.systemd_service:
+    name: apt-daily-upgrade.timer
+    enabled: true
+    state: started

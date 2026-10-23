@@ -1,0 +1,91 @@
+---
+- name: Validate resolver configuration
+  ansible.builtin.assert:
+    that:
+      - dns_resolver_nameservers | length > 0
+    fail_msg: dns_resolver_nameservers must contain at least one address.
+
+- name: Inspect /etc/resolv.conf without following symlinks
+  ansible.builtin.stat:
+    path: /etc/resolv.conf
+    follow: false
+  register: dns_resolver_resolv_conf
+
+- name: Reject resolver symlinks not managed by systemd-resolved
+  ansible.builtin.fail:
+    msg: >-
+      /etc/resolv.conf points to {{ dns_resolver_resolv_conf.stat.lnk_target }}.
+      This role only configures regular files or systemd-resolved symlinks.
+  when:
+    - dns_resolver_resolv_conf.stat.islnk | default(false)
+    - "'systemd/resolve' not in dns_resolver_resolv_conf.stat.lnk_target"
+
+- name: Reject immutable mode for systemd-resolved symlinks
+  ansible.builtin.fail:
+    msg: dns_resolver_immutable applies only to a regular /etc/resolv.conf, not a systemd-resolved symlink.
+  when:
+    - dns_resolver_resolv_conf.stat.islnk | default(false)
+    - "'systemd/resolve' in dns_resolver_resolv_conf.stat.lnk_target"
+    - dns_resolver_immutable | bool
+
+- name: Check whether regular resolv.conf content needs updating
+  ansible.builtin.set_fact:
+    dns_resolver_content_changed: >-
+      {{ not dns_resolver_resolv_conf.stat.exists or
+         (dns_resolver_resolv_conf.stat.checksum | default('')) !=
+         (lookup('ansible.builtin.template', 'resolv.conf.j2') | hash('sha1')) }}
+  when: not (dns_resolver_resolv_conf.stat.islnk | default(false))
+
+- name: Remove immutable flag before changing resolv.conf
+  ansible.builtin.file:
+    path: /etc/resolv.conf
+    state: file
+    attributes: "-i"
+  when:
+    - dns_resolver_resolv_conf.stat.exists
+    - not (dns_resolver_resolv_conf.stat.islnk | default(false))
+    - "'immutable' in (dns_resolver_resolv_conf.stat.attributes | default([]))"
+    - dns_resolver_content_changed or not (dns_resolver_immutable | bool)
+
+- name: Create the systemd-resolved drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when:
+    - dns_resolver_resolv_conf.stat.islnk | default(false)
+    - "'systemd/resolve' in dns_resolver_resolv_conf.stat.lnk_target"
+
+- name: Configure systemd-resolved when it owns resolv.conf
+  ansible.builtin.template:
+    src: systemd-resolved.conf.j2
+    dest: /etc/systemd/resolved.conf.d/99-dns-resolver.conf
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  when:
+    - dns_resolver_resolv_conf.stat.islnk | default(false)
+    - "'systemd/resolve' in dns_resolver_resolv_conf.stat.lnk_target"
+  notify: Restart systemd-resolved
+
+- name: Configure a regular /etc/resolv.conf
+  ansible.builtin.template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  when: not (dns_resolver_resolv_conf.stat.islnk | default(false))
+
+- name: Make regular resolv.conf immutable
+  ansible.builtin.file:
+    path: /etc/resolv.conf
+    state: file
+    attributes: "+i"
+  when:
+    - not (dns_resolver_resolv_conf.stat.islnk | default(false))
+    - dns_resolver_immutable | bool

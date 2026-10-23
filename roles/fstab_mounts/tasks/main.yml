@@ -1,0 +1,21 @@
+---
+- name: Configure and mount filesystems
+  ansible.posix.mount:
+    src: "{{ item.src }}"
+    path: "{{ item.path }}"
+    fstype: "{{ item.fstype | default(fstab_mounts_fstype) }}"
+    opts: "{{ item.opts | default(fstab_mounts_opts) }}"
+    dump: "{{ item.dump | default(fstab_mounts_dump) }}"
+    passno: "{{ item.passno | default(fstab_mounts_passno) }}"
+    fstab: "{{ fstab_mounts_file }}"
+    state: mounted
+  loop: "{{ fstab_mounts_entries }}"
+
+- name: Set mounted filesystem root permissions
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    mode: "{{ item.mode | default(omit) }}"
+  loop: "{{ fstab_mounts_entries }}"

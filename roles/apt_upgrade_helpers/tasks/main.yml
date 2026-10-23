@@ -1,0 +1,40 @@
+---
+- name: Require a Debian-family host
+  ansible.builtin.assert:
+    that: ansible_facts.os_family == 'Debian'
+    fail_msg: apt_upgrade_helpers currently supports Debian-family hosts only.
+
+- name: Install changelog and restart helpers
+  ansible.builtin.apt:
+    name:
+      - apt-listchanges
+      - needrestart
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install Debian Bug Tracking System integration on Debian
+  ansible.builtin.apt:
+    name: apt-listbugs
+    state: present
+  when:
+    - ansible_facts.distribution == 'Debian'
+    - apt_upgrade_helpers_listbugs_enabled | bool
+
+- name: Configure non-interactive changelog reporting
+  ansible.builtin.template:
+    src: listchanges.conf.j2
+    dest: /etc/apt/listchanges.conf
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+
+- name: Restart eligible services after package upgrades
+  ansible.builtin.template:
+    src: needrestart.conf.j2
+    dest: /etc/needrestart/conf.d/99-math-auto-restart.conf
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true

@@ -1,0 +1,7 @@
+# Managed by Ansible (dns_resolver).
+{% for address in dns_resolver_nameservers %}
+nameserver {{ address }}
+{% endfor %}
+{% if dns_resolver_search_domains %}
+search {{ dns_resolver_search_domains | join(' ') }}
+{% endif %}

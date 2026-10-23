@@ -1,0 +1,7 @@
+---
+fstab_mounts_file: /etc/fstab
+fstab_mounts_fstype: ext4
+fstab_mounts_opts: defaults
+fstab_mounts_dump: "0"
+fstab_mounts_passno: "0"
+fstab_mounts_entries: []

@@ -1,0 +1,35 @@
+---
+- name: Require a Debian-family host
+  ansible.builtin.assert:
+    that: ansible_facts.os_family == 'Debian'
+    fail_msg: apt_full_upgrade currently supports Debian-family hosts only.
+
+- name: Upgrade packages within the current release
+  ansible.builtin.apt:
+    upgrade: full
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Check for a reboot-required marker
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: apt_full_upgrade_reboot_marker
+  when: apt_full_upgrade_reboot_if_required | bool
+
+- name: Check for a pending kernel upgrade with needrestart
+  ansible.builtin.command: needrestart -b -k
+  register: apt_full_upgrade_needrestart
+  changed_when: false
+  failed_when: false
+  when: apt_full_upgrade_reboot_if_required | bool
+
+- name: Reboot when required
+  ansible.builtin.reboot:
+    msg: Reboot requested by math-playbook after full-upgrade
+    reboot_timeout: "{{ apt_full_upgrade_reboot_timeout }}"
+    post_reboot_delay: 20
+  when:
+    - apt_full_upgrade_reboot_if_required | bool
+    - >-
+      apt_full_upgrade_reboot_marker.stat.exists or
+      (apt_full_upgrade_needrestart.stdout | default('')) is search('NEEDRESTART-KSTA: [23]')

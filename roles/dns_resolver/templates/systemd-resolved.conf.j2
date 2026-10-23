@@ -1,0 +1,5 @@
+# Managed by Ansible (dns_resolver).
+[Resolve]
+DNS={{ dns_resolver_nameservers | join(' ') }}
+FallbackDNS=
+Domains={{ (['~.'] + dns_resolver_search_domains) | join(' ') }}

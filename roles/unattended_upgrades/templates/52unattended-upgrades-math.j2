@@ -1,0 +1,1 @@
+Unattended-Upgrade::Automatic-Reboot "{{ unattended_upgrades_automatic_reboot | bool | ternary('true', 'false') }}";

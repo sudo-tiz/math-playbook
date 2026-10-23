@@ -1,0 +1,11 @@
+---
+- name: Require the dedicated reboot command
+  ansible.builtin.assert:
+    that: reboot_server_confirmed | bool
+    fail_msg: Use `just math-reboot` to confirm an intentional server reboot.
+
+- name: Reboot the server and wait for SSH
+  ansible.builtin.reboot:
+    msg: Reboot requested by math-playbook
+    reboot_timeout: "{{ reboot_server_timeout }}"
+    post_reboot_delay: 20

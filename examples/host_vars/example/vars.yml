@@ -1,0 +1,20 @@
+---
+ansible_host: server.example.invalid
+ansible_port: 22
+ansible_ssh_user: example-user
+ansible_ssh_private_key_file: ~/.ssh/example
+fast_linux_config_users:
+  - example-user
+  - root
+fast_linux_config_version: d3aef251e1d1d5ad5078e273d17a03f870001ebf
+msmtp_relay_from: server@example.invalid
+system_mail_recipient: admin@example.invalid
+fstab_mounts_entries:
+  - src: /dev/disk/by-label/MEDIA
+    path: /mnt/media
+    owner: 999
+    group: 1001
+    mode: "0777"
+  - src: /dev/disk/by-label/BACKUP
+    path: /mnt/backup
+    mode: "0700"

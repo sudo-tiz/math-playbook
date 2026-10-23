@@ -1,0 +1,4 @@
+---
+msmtp_relay_host: 127.0.0.1
+msmtp_relay_port: 25
+msmtp_relay_from: ""

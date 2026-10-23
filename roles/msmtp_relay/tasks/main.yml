@@ -1,0 +1,27 @@
+---
+- name: Require a Debian-family host
+  ansible.builtin.assert:
+    that: ansible_facts.os_family == 'Debian'
+    fail_msg: msmtp_relay currently supports Debian-family hosts only.
+
+- name: Validate msmtp relay settings
+  ansible.builtin.assert:
+    that:
+      - msmtp_relay_from | length > 0
+    fail_msg: Set msmtp_relay_from to a sender address accepted by the SMTP relay.
+
+- name: Install the sendmail-compatible SMTP client
+  ansible.builtin.apt:
+    name: msmtp-mta
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Configure system-wide msmtp relay
+  ansible.builtin.template:
+    src: msmtprc.j2
+    dest: /etc/msmtprc
+    owner: root
+    group: root
+    mode: "0600"
+    backup: true

@@ -1,0 +1,25 @@
+---
+- name: Configure server
+  hosts: math_servers
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: dns_resolver
+      tags: [bootstrap, role-dns_resolver]
+    - role: fast_linux_config
+      tags: [bootstrap, role-fast_linux_config]
+    - role: fstab_mounts
+      tags: [bootstrap, role-fstab_mounts]
+    - role: system_timezone
+      tags: [bootstrap, role-system_timezone]
+    - role: msmtp_relay
+      tags: [bootstrap, role-msmtp_relay]
+    - role: apt_upgrade_helpers
+      tags: [bootstrap, role-apt_upgrade_helpers]
+    - role: unattended_upgrades
+      tags: [bootstrap, role-unattended_upgrades]
+    - role: apt_full_upgrade
+      tags: [role-apt_full_upgrade]
+    - role: reboot_server
+      tags: [role-reboot_server]

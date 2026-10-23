@@ -1,0 +1,11 @@
+[cmdline]
+frontend=pager
+
+[apt]
+{% if system_mail_recipient | length > 0 %}
+frontend=mail
+email_address={{ system_mail_recipient }}
+{% else %}
+frontend=none
+{% endif %}
+confirm=0
