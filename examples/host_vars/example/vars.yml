@@ -15,7 +15,7 @@ media_series_path: "{{ media_path }}/serie"
 ########## math ##########
 system_mail_recipient: admin@example.invalid
 # Overrides of the group_vars/math_servers defaults:
-# fast_linux_config_version: d3aef251e1d1d5ad5078e273d17a03f870001ebf
+# larbuste_version: d3aef251e1d1d5ad5078e273d17a03f870001ebf
 # msmtp_relay_from: server@example.invalid
 fstab_mounts_entries:
   - src: /dev/disk/by-label/MEDIA

@@ -2,25 +2,25 @@
 - name: Require a Debian-family host
   ansible.builtin.assert:
     that: ansible_facts.os_family == 'Debian'
-    fail_msg: fast_linux_config currently supports Debian-family hosts only.
+    fail_msg: larbuste currently supports Debian-family hosts only.
 
-- name: Validate fast_linux_config inputs
+- name: Validate larbuste inputs
   ansible.builtin.assert:
     that:
-      - fast_linux_config_users | length > 0
-      - fast_linux_config_version | length > 0
-    fail_msg: Set at least one user and a non-empty fast_linux_config_version.
+      - larbuste_users | length > 0
+      - larbuste_version | length > 0
+    fail_msg: Set at least one user and a non-empty larbuste_version.
 
 - name: Install editor and shell packages
   ansible.builtin.apt:
-    name: "{{ fast_linux_config_packages }}"
+    name: "{{ larbuste_packages }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
 
 - name: Create the source checkout parent directory
   ansible.builtin.file:
-    path: "{{ fast_linux_config_checkout_path | dirname }}"
+    path: "{{ larbuste_checkout_path | dirname }}"
     state: directory
     owner: root
     group: root
@@ -28,9 +28,9 @@
 
 - name: Fetch the pinned dotfiles revision
   ansible.builtin.git:
-    repo: "{{ fast_linux_config_repository }}"
-    dest: "{{ fast_linux_config_checkout_path }}"
-    version: "{{ fast_linux_config_version }}"
+    repo: "{{ larbuste_repository }}"
+    dest: "{{ larbuste_checkout_path }}"
+    version: "{{ larbuste_version }}"
     update: true
 
 - name: Read local user accounts
@@ -41,7 +41,7 @@
   ansible.builtin.assert:
     that: item in ansible_facts.getent_passwd
     fail_msg: "User '{{ item }}' does not exist."
-  loop: "{{ fast_linux_config_users }}"
+  loop: "{{ larbuste_users }}"
 
 - name: Create Neovim and tmux configuration directories
   ansible.builtin.file:
@@ -50,23 +50,23 @@
     owner: "{{ item.0 }}"
     group: "{{ ansible_facts.getent_passwd[item.0][2] | int }}"
     mode: "0755"
-  loop: "{{ fast_linux_config_users | product(['nvim', 'tmux']) | list }}"
+  loop: "{{ larbuste_users | product(['nvim', 'tmux']) | list }}"
 
 - name: Install dotfiles for selected users
   ansible.builtin.copy:
-    src: "{{ fast_linux_config_checkout_path }}/{{ item.1.src }}"
+    src: "{{ larbuste_checkout_path }}/{{ item.1.src }}"
     dest: "{{ ansible_facts.getent_passwd[item.0][4] }}/{{ item.1.dest }}"
     remote_src: true
     owner: "{{ item.0 }}"
     group: "{{ ansible_facts.getent_passwd[item.0][2] | int }}"
     mode: "0644"
     backup: true
-  loop: "{{ fast_linux_config_users | product(fast_linux_config_dotfiles) | list }}"
+  loop: "{{ larbuste_users | product(larbuste_dotfiles) | list }}"
   when: not ansible_check_mode
 
 - name: Set Zsh as the login shell
   ansible.builtin.user:
     name: "{{ item }}"
     shell: /usr/bin/zsh
-  loop: "{{ fast_linux_config_users }}"
-  when: fast_linux_config_set_login_shell | bool
+  loop: "{{ larbuste_users }}"
+  when: larbuste_set_login_shell | bool

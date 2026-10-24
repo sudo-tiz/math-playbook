@@ -11,7 +11,7 @@ Roles are idempotent, one concern each, tagged `role-<name>` (`bootstrap` for fi
 | Role | Does | Bootstrap |
 |------|------|:---------:|
 | `dns_resolver` | resolv.conf / systemd-resolved | ✅ |
-| `fast_linux_config` | Neovim, tmux, Zsh, Git, dotfiles | ✅ |
+| `larbuste` | Neovim, tmux, Zsh, Git, dotfiles | ✅ |
 | `fstab_mounts` | fstab entries (ext4, virtiofs…) | ✅ |
 | `system_timezone` | timezone | ✅ |
 | `msmtp_relay` | `sendmail` via MASH's Exim relay | ✅ |
@@ -24,7 +24,7 @@ Roles are idempotent, one concern each, tagged `role-<name>` (`bootstrap` for fi
 
 ## Usage
 
-Run from `server/`, which syncs the shared inventory first. Requires the Ansible community package (`ansible.posix`, `community.general`, `community.libvirt`).
+Run from `JARDIN/`, which syncs the shared inventory first. Requires the Ansible community package (`ansible.posix`, `community.general`, `community.libvirt`).
 
 ```sh
 just math-bootstrap [host]       # bootstrap roles; host or group (default math_servers)
@@ -38,12 +38,12 @@ Non-bootstrap roles need an explicit command.
 
 ## Inventory
 
-Shared `server/inventory`, copied to `inventory/` (git-ignored) before each run. Host values go in `host_vars/<host>/vars.yml`; see `examples/`. `setup.yml` plays `math_servers`, then `firewall_hosts`, then `vm_hosts`.
+Shared `JARDIN/inventory`, copied to `inventory/` (git-ignored) before each run. Host values go in `host_vars/<host>/vars.yml`; see `examples/`. `setup.yml` plays `math_servers`, then `firewall_hosts`, then `vm_hosts`.
 
 `group_vars/math_servers` sets the defaults; override them in `host_vars`:
 
-- `fast_linux_config_version: main` (the role itself pins a commit)
-- `fast_linux_config_users`: SSH user and `root`
+- `larbuste_version: main` (the role itself pins a commit)
+- `larbuste_users`: SSH user and `root`
 - `msmtp_relay_from`: `<host>@<mail_domain>`, from `group_vars/base`
 
 ## VMs

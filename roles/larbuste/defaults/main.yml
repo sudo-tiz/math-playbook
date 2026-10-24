@@ -1,0 +1,17 @@
+---
+larbuste_repository: https://github.com/sudo-Tiz/LARBUSTE.git
+larbuste_version: d3aef251e1d1d5ad5078e273d17a03f870001ebf
+larbuste_checkout_path: /usr/local/src/larbuste
+larbuste_users: []
+larbuste_packages:
+  - git
+  - neovim
+  - tmux
+  - zsh
+larbuste_set_login_shell: true
+larbuste_dotfiles:
+  - {src: .bashrc, dest: .bashrc}
+  - {src: .vimrc, dest: .vimrc}
+  - {src: .zshrc, dest: .zshrc}
+  - {src: init.lua, dest: .config/nvim/init.lua}
+  - {src: tmux.conf, dest: .config/tmux/tmux.conf}

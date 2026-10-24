@@ -7,8 +7,8 @@
   roles:
     - role: dns_resolver
       tags: [bootstrap, role-dns_resolver]
-    - role: fast_linux_config
-      tags: [bootstrap, role-fast_linux_config]
+    - role: larbuste
+      tags: [bootstrap, role-larbuste]
     - role: fstab_mounts
       tags: [bootstrap, role-fstab_mounts]
     - role: system_timezone
