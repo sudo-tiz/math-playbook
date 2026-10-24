@@ -1,15 +1,6 @@
 ---
-- name: Require a Debian-family host
-  ansible.builtin.assert:
-    that: ansible_facts.os_family == 'Debian'
-    fail_msg: larbuste currently supports Debian-family hosts only.
-
-- name: Validate larbuste inputs
-  ansible.builtin.assert:
-    that:
-      - larbuste_users | length > 0
-      - larbuste_version | length > 0
-    fail_msg: Set at least one user and a non-empty larbuste_version.
+- name: Validate inputs
+  ansible.builtin.import_tasks: validate.yml
 
 - name: Install editor and shell packages
   ansible.builtin.apt:
@@ -33,40 +24,9 @@
     version: "{{ larbuste_version }}"
     update: true
 
-- name: Read local user accounts
-  ansible.builtin.getent:
-    database: passwd
-
-- name: Validate target users exist
-  ansible.builtin.assert:
-    that: item in ansible_facts.getent_passwd
-    fail_msg: "User '{{ item }}' does not exist."
+- name: Configure each user
+  ansible.builtin.include_tasks: user.yml
   loop: "{{ larbuste_users }}"
-
-- name: Create Neovim and tmux configuration directories
-  ansible.builtin.file:
-    path: "{{ ansible_facts.getent_passwd[item.0][4] }}/.config/{{ item.1 }}"
-    state: directory
-    owner: "{{ item.0 }}"
-    group: "{{ ansible_facts.getent_passwd[item.0][2] | int }}"
-    mode: "0755"
-  loop: "{{ larbuste_users | product(['nvim', 'tmux']) | list }}"
-
-- name: Install dotfiles for selected users
-  ansible.builtin.copy:
-    src: "{{ larbuste_checkout_path }}/{{ item.1.src }}"
-    dest: "{{ ansible_facts.getent_passwd[item.0][4] }}/{{ item.1.dest }}"
-    remote_src: true
-    owner: "{{ item.0 }}"
-    group: "{{ ansible_facts.getent_passwd[item.0][2] | int }}"
-    mode: "0644"
-    backup: true
-  loop: "{{ larbuste_users | product(larbuste_dotfiles) | list }}"
-  when: not ansible_check_mode
-
-- name: Set Zsh as the login shell
-  ansible.builtin.user:
-    name: "{{ item }}"
-    shell: /usr/bin/zsh
-  loop: "{{ larbuste_users }}"
-  when: larbuste_set_login_shell | bool
+  loop_control:
+    loop_var: larbuste_user
+    label: "{{ larbuste_user.name }}"

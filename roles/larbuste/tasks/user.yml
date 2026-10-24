@@ -1,0 +1,39 @@
+---
+# Loop var: larbuste_user ({name, dotfiles?, set_login_shell?}).
+- name: Resolve account facts and selected dotfiles
+  ansible.builtin.set_fact:
+    larbuste_home: "{{ ansible_facts.getent_passwd[larbuste_user.name][4] }}"
+    larbuste_gid: "{{ ansible_facts.getent_passwd[larbuste_user.name][2] | int }}"
+    larbuste_selected: "{{ larbuste_dotfiles | selectattr('src', 'in', larbuste_user.dotfiles | default(larbuste_all_srcs)) | list }}"
+
+- name: Create dotfile directories
+  ansible.builtin.file:
+    path: "{{ larbuste_home }}/{{ item.dest | dirname }}"
+    state: directory
+    owner: "{{ larbuste_user.name }}"
+    group: "{{ larbuste_gid }}"
+    mode: "0755"
+  loop: "{{ larbuste_selected }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  when: item.dest | dirname | length > 0
+
+- name: Install dotfiles
+  ansible.builtin.copy:
+    src: "{{ larbuste_checkout_path }}/{{ item.src }}"
+    dest: "{{ larbuste_home }}/{{ item.dest }}"
+    remote_src: true
+    owner: "{{ larbuste_user.name }}"
+    group: "{{ larbuste_gid }}"
+    mode: "0644"
+    backup: true
+  loop: "{{ larbuste_selected }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  when: not ansible_check_mode
+
+- name: Set Zsh as the login shell
+  ansible.builtin.user:
+    name: "{{ larbuste_user.name }}"
+    shell: /usr/bin/zsh
+  when: larbuste_user.set_login_shell | default(larbuste_set_login_shell) | bool

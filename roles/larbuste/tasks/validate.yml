@@ -1,0 +1,33 @@
+---
+- name: Require a Debian-family host
+  ansible.builtin.assert:
+    that: ansible_facts.os_family == 'Debian'
+    fail_msg: larbuste currently supports Debian-family hosts only.
+
+- name: Validate larbuste inputs
+  ansible.builtin.assert:
+    that:
+      - larbuste_users | length > 0
+      - larbuste_users | rejectattr('name', 'defined') | list | length == 0
+      - larbuste_version | length > 0
+    fail_msg: Set at least one larbuste_users entry with a name, and a non-empty larbuste_version.
+
+- name: Validate per-user dotfile selections
+  ansible.builtin.assert:
+    that: unknown | length == 0
+    fail_msg: "Unknown dotfiles for '{{ item.name }}': {{ unknown }}"
+  vars:
+    unknown: "{{ item.dotfiles | default([]) | difference(larbuste_all_srcs) }}"
+  loop: "{{ larbuste_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Read local user accounts
+  ansible.builtin.getent:
+    database: passwd
+
+- name: Validate target users exist
+  ansible.builtin.assert:
+    that: item in ansible_facts.getent_passwd
+    fail_msg: "User '{{ item }}' does not exist."
+  loop: "{{ larbuste_users | map(attribute='name') | list }}"

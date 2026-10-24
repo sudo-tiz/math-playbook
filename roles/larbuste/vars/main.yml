@@ -1,0 +1,2 @@
+---
+larbuste_all_srcs: "{{ larbuste_dotfiles | map(attribute='src') | list }}"

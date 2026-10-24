@@ -43,7 +43,7 @@ Shared `JARDIN/inventory`, copied to `inventory/` (git-ignored) before each run.
 `group_vars/math_servers` sets the defaults; override them in `host_vars`:
 
 - `larbuste_version: main` (the role itself pins a commit)
-- `larbuste_users`: SSH user and `root`
+- `larbuste_users`: list of `{name, dotfiles?, set_login_shell?}`; SSH user
 - `msmtp_relay_from`: `<host>@<mail_domain>`, from `group_vars/base`
 
 ## VMs
