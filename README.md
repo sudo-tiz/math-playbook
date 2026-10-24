@@ -58,3 +58,8 @@ A VM is a host of the `vms` group describing itself in its `host_vars`: `vm_hype
 
 > [!NOTE]
 > Values read across hosts (`vm_*`, `my_domain`) must be literals: Ansible 2.19 fails on nested `hostvars` lookups.
+
+## Related
+
+- [JARDIN](https://github.com/sudo-Tiz/JARDIN) — entry point and shared inventory
+- [LARBUSTE](https://github.com/sudo-Tiz/LARBUSTE) — dotfiles, applied by the `larbuste` role
