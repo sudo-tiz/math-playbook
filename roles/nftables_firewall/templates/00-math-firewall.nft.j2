@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+table inet math_firewall
+delete table inet math_firewall
+table inet math_firewall {
+  chain input {
+    type filter hook input priority 0; policy drop;
+    ct state invalid drop
+    ct state established,related accept
+    iifname "lo" accept
+{% for iface in nftables_firewall_trusted_interfaces %}
+    iifname "{{ iface }}" accept
+{% endfor %}
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+    tcp dport { {{ ([nftables_firewall_ssh_port | int] + nftables_firewall_tcp_ports | map('int') | list) | join(', ') }} } accept
+{% if nftables_firewall_udp_ports %}
+    udp dport { {{ nftables_firewall_udp_ports | map('int') | join(', ') }} } accept
+{% endif %}
+  }
+}

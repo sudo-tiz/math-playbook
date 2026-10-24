@@ -1,0 +1,21 @@
+---
+libvirt_vm_cloud_image_url: https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2
+libvirt_vm_cloud_image_checksum: sha512:https://cloud.debian.org/images/cloud/trixie/latest/SHA512SUMS
+libvirt_vm_images_dir: /var/lib/libvirt/images
+
+# Isolated networks: forward mode "open" (libvirt adds no firewall rules); nftables NATs them.
+# Give each VM its own network if the VMs must not reach each other.
+libvirt_vm_networks:
+  - { name: media, bridge: virbr-media, address: 10.77.0.1/24, cidr: 10.77.0.0/24 }
+libvirt_vm_nameservers: [1.1.1.1, 9.9.9.9]
+# Destinations the guests may not reach through the host (LAN, Docker networks, link-local, CGNAT).
+libvirt_vm_blocked_destinations: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 100.64.0.0/10]
+# Let Docker's FORWARD policy pass the bridge (Docker drops forwarded traffic by default).
+libvirt_vm_docker_user_rules: true
+
+# Guests are the hosts of the `vms` group whose `vm_hypervisor` is this host. Per guest (host_vars):
+# vm_ip, vm_user, vm_network, vm_vcpus (2), vm_memory_mib (4096), vm_disk_gib (40),
+# vm_shares [{source, tag}], vm_hostdevs ["0000:00:02.0"].
+libvirt_vm_ssh_authorized_keys: []
+# Only create this guest (empty: all of them). Set with --extra-vars.
+libvirt_vm_only: ""

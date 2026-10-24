@@ -1,20 +1,32 @@
 ---
+########## common (mash + math) ##########
 ansible_host: server.example.invalid
 ansible_port: 22
 ansible_ssh_user: example-user
 ansible_ssh_private_key_file: ~/.ssh/example
-fast_linux_config_users:
-  - example-user
-  - root
-fast_linux_config_version: d3aef251e1d1d5ad5078e273d17a03f870001ebf
-msmtp_relay_from: server@example.invalid
+my_domain: example.invalid
+
+backup_mount_path: /mnt/backup
+mash_backup_dir: "{{ backup_mount_path }}/mash-backup"
+media_path: /mnt/media
+media_movies_path: "{{ media_path }}/film"
+media_series_path: "{{ media_path }}/serie"
+
+########## math ##########
 system_mail_recipient: admin@example.invalid
+# Overrides of the group_vars/math_servers defaults:
+# fast_linux_config_version: d3aef251e1d1d5ad5078e273d17a03f870001ebf
+# msmtp_relay_from: server@example.invalid
 fstab_mounts_entries:
   - src: /dev/disk/by-label/MEDIA
-    path: /mnt/media
+    path: "{{ media_path }}"
     owner: 999
     group: 1001
     mode: "0777"
   - src: /dev/disk/by-label/BACKUP
-    path: /mnt/backup
+    path: "{{ backup_mount_path }}"
     mode: "0700"
+# nftables_firewall_tcp_ports: []
+# libvirt_vm_ssh_authorized_keys: ["ssh-ed25519 AAAA... example"]
+# libvirt_vm_networks:
+#   - { name: media, bridge: virbr-media, address: 10.77.0.1/24, cidr: 10.77.0.0/24 }

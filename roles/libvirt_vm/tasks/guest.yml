@@ -1,0 +1,83 @@
+---
+- name: Load the guest definition
+  ansible.builtin.set_fact:
+    guest:
+      name: "{{ vm_host }}"
+      ip: "{{ hostvars[vm_host].vm_ip }}"
+      user: "{{ hostvars[vm_host].vm_user }}"
+      network: "{{ hostvars[vm_host].vm_network | default(libvirt_vm_networks[0].name) }}"
+      ssh_authorized_keys: "{{ libvirt_vm_ssh_authorized_keys }}"
+      vcpus: "{{ hostvars[vm_host].vm_vcpus | default(2) }}"
+      memory_mib: "{{ hostvars[vm_host].vm_memory_mib | default(4096) }}"
+      disk_gib: "{{ hostvars[vm_host].vm_disk_gib | default(40) }}"
+      shares: "{{ hostvars[vm_host].vm_shares | default([]) }}"
+      hostdevs: "{{ hostvars[vm_host].vm_hostdevs | default([]) }}"
+
+- name: Require SSH keys for the guest
+  ansible.builtin.assert:
+    that: guest.ssh_authorized_keys | length > 0
+    fail_msg: Set libvirt_vm_ssh_authorized_keys on the hypervisor.
+
+- name: Derive the guest network and MAC address
+  ansible.builtin.set_fact:
+    guest_net: "{{ libvirt_vm_networks | selectattr('name', 'equalto', guest.network) | first }}"
+    guest_mac: "{{ guest.mac | default('52:54:00:' ~ (guest.name | hash('md5'))[0:2] ~ ':' ~ (guest.name | hash('md5'))[2:4] ~ ':' ~ (guest.name | hash('md5'))[4:6]) }}"
+    guest_dir: "{{ libvirt_vm_images_dir }}/{{ guest.name }}"
+
+- name: Create the guest directory
+  ansible.builtin.file:
+    path: "{{ guest_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the guest disk from the cloud image
+  ansible.builtin.shell: |
+    set -e
+    qemu-img convert -O qcow2 "{{ libvirt_vm_images_dir }}/base/{{ libvirt_vm_cloud_image_url | basename }}" disk.qcow2.tmp
+    qemu-img resize disk.qcow2.tmp {{ guest.disk_gib | default(40) }}G
+    mv disk.qcow2.tmp disk.qcow2
+  args:
+    chdir: "{{ guest_dir }}"
+    creates: "{{ guest_dir }}/disk.qcow2"
+
+- name: Render the cloud-init files
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ guest_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop: [user-data, meta-data, network-config]
+  register: guest_cloud_init
+
+- name: Check the cloud-init seed
+  ansible.builtin.stat:
+    path: "{{ guest_dir }}/seed.iso"
+  register: guest_seed
+
+- name: Build the cloud-init seed
+  ansible.builtin.command: >-
+    cloud-localds --network-config=network-config seed.iso user-data meta-data
+  args:
+    chdir: "{{ guest_dir }}"
+  when: guest_cloud_init.changed or not guest_seed.stat.exists
+  changed_when: true
+
+- name: Define the guest
+  community.libvirt.virt:
+    command: define
+    xml: "{{ lookup('ansible.builtin.template', 'domain.xml.j2') }}"
+
+- name: Start the guest at boot
+  community.libvirt.virt:
+    name: "{{ guest.name }}"
+    state: running
+    autostart: true
+
+- name: Wait for SSH on the guest
+  ansible.builtin.wait_for:
+    host: "{{ guest.ip }}"
+    port: 22
+    timeout: 300

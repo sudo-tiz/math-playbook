@@ -1,0 +1,12 @@
+version: 2
+ethernets:
+  nic0:
+    match:
+      macaddress: "{{ guest_mac }}"
+    set-name: eth0
+    addresses: ["{{ guest.ip }}/{{ guest_net.address | split('/') | last }}"]
+    routes:
+      - to: default
+        via: {{ guest_net.address | split('/') | first }}
+    nameservers:
+      addresses: {{ libvirt_vm_nameservers | to_json }}

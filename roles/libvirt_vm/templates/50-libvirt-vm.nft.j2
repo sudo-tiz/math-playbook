@@ -1,0 +1,32 @@
+# {{ ansible_managed }}
+table ip math_vm_nat
+delete table ip math_vm_nat
+table ip math_vm_nat {
+  chain postrouting {
+    type nat hook postrouting priority srcnat; policy accept;
+{% for net in libvirt_vm_networks %}
+    ip saddr {{ net.cidr }} oifname != "{{ net.bridge }}" masquerade
+{% endfor %}
+  }
+}
+
+table inet math_vm_filter
+delete table inet math_vm_filter
+table inet math_vm_filter {
+  chain input {
+    type filter hook input priority -10; policy accept;
+{% for net in libvirt_vm_networks %}
+    iifname "{{ net.bridge }}" ct state established,related accept
+    iifname "{{ net.bridge }}" drop
+{% endfor %}
+  }
+  chain forward {
+    type filter hook forward priority -10; policy accept;
+{% for net in libvirt_vm_networks %}
+    oifname "{{ net.bridge }}" ct state established,related accept
+    oifname "{{ net.bridge }}" drop
+    iifname "{{ net.bridge }}" ip daddr { {{ libvirt_vm_blocked_destinations | join(', ') }} } drop
+    iifname "{{ net.bridge }}" meta nfproto ipv6 drop
+{% endfor %}
+  }
+}

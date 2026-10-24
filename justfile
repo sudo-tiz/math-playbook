@@ -5,6 +5,9 @@ default:
 
 bootstrap *args: (run-tags "bootstrap" args)
 
+create-vms vm="" *args:
+    just --justfile {{ justfile() }} run-tags create-vms --extra-vars=libvirt_vm_only={{ vm }} {{ args }}
+
 full-upgrade *args:
     just --justfile {{ justfile() }} run-tags role-apt_full_upgrade {{ args }}
 

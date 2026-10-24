@@ -1,0 +1,17 @@
+---
+vm_hypervisor: example
+vm_user: example-user
+my_domain: example.invalid
+media_path: /mnt/media
+vm_network: media
+vm_ip: 10.77.0.2
+vm_vcpus: 4
+vm_memory_mib: 4096
+vm_disk_gib: 40
+vm_shares:
+  - { source: "{{ media_path }}", tag: media }
+# vm_hostdevs: ["0000:00:02.0"]
+fstab_mounts_entries:
+  - src: media
+    path: "{{ media_path }}"
+    fstype: virtiofs

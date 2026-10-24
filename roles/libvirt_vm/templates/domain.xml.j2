@@ -1,0 +1,56 @@
+{% set mem = guest.memory_mib | default(4096) %}
+<domain type='kvm'>
+  <name>{{ guest.name }}</name>
+  <memory unit='MiB'>{{ mem }}</memory>
+  <currentMemory unit='MiB'>{{ mem }}</currentMemory>
+  <memoryBacking>
+    <source type='memfd'/>
+    <access mode='shared'/>
+  </memoryBacking>
+  <vcpu>{{ guest.vcpus | default(2) }}</vcpu>
+  <os>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <features><acpi/><apic/></features>
+  <cpu mode='host-passthrough'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='{{ libvirt_vm_images_dir }}/{{ guest.name }}/disk.qcow2'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='{{ libvirt_vm_images_dir }}/{{ guest.name }}/seed.iso'/>
+      <target dev='sda' bus='sata'/>
+      <readonly/>
+    </disk>
+    <interface type='network'>
+      <mac address='{{ guest_mac }}'/>
+      <source network='{{ guest.network }}'/>
+      <model type='virtio'/>
+    </interface>
+{% for share in guest.shares | default([]) %}
+    <filesystem type='mount' accessmode='passthrough'>
+      <driver type='virtiofs'/>
+      <source dir='{{ share.source }}'/>
+      <target dir='{{ share.tag }}'/>
+    </filesystem>
+{% endfor %}
+{% for dev in guest.hostdevs | default([]) %}
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <source>
+        <address domain='0x{{ dev.split(":")[0] }}' bus='0x{{ dev.split(":")[1] }}' slot='0x{{ dev.split(":")[2].split(".")[0] }}' function='0x{{ dev.split(".")[1] }}'/>
+      </source>
+    </hostdev>
+{% endfor %}
+    <serial type='pty'/>
+    <console type='pty'/>
+    <rng model='virtio'><backend model='random'>/dev/urandom</backend></rng>
+  </devices>
+</domain>

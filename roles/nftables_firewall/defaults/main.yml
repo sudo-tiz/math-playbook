@@ -1,0 +1,6 @@
+---
+nftables_firewall_ssh_port: "{{ ansible_port | default(22) }}"
+nftables_firewall_tcp_ports: []
+nftables_firewall_udp_ports: [68]
+# iifname patterns accepted on input (Docker bridges reach the host). Docker-published ports are forwarded, not input.
+nftables_firewall_trusted_interfaces: [docker0, "br-*"]

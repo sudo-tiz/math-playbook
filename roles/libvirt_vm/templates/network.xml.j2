@@ -1,0 +1,6 @@
+<network>
+  <name>{{ net.name }}</name>
+  <forward mode='open'/>
+  <bridge name='{{ net.bridge }}' stp='off' delay='0'/>
+  <ip address='{{ net.address | split("/") | first }}' prefix='{{ net.address | split("/") | last }}'/>
+</network>

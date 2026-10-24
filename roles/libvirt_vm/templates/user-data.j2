@@ -1,0 +1,15 @@
+#cloud-config
+hostname: {{ guest.name }}
+manage_etc_hosts: true
+disable_root: true
+ssh_pwauth: false
+users:
+  - name: {{ guest.user }}
+    groups: [sudo]
+    shell: /bin/bash
+    lock_passwd: true
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+{% for key in guest.ssh_authorized_keys %}
+      - {{ key }}
+{% endfor %}

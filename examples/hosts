@@ -1,2 +1,11 @@
 [math_servers]
 example
+# example-vm
+
+[vm_hosts]
+# example
+
+[vms]
+# example-vm
+
+[firewall_hosts]

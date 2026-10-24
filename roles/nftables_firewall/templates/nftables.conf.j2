@@ -1,0 +1,4 @@
+#!/usr/sbin/nft -f
+# {{ ansible_managed }}
+# No "flush ruleset": Docker and libvirt own their tables. Each file replaces only its own table.
+include "/etc/nftables.d/*.nft"

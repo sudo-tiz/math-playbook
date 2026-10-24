@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Let Docker forward traffic of the VM bridges
+After=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/sh -c 'for a in {% for net in libvirt_vm_networks %}"-i {{ net.bridge }}" "-o {{ net.bridge }}" {% endfor %}; do iptables -w -C DOCKER-USER $a -j ACCEPT 2>/dev/null || iptables -w -I DOCKER-USER $a -j ACCEPT; done'
+
+[Install]
+WantedBy=docker.service

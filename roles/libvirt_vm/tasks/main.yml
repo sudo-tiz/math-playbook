@@ -1,0 +1,139 @@
+---
+- name: Require a Debian-family x86_64 host
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family == 'Debian'
+      - ansible_facts.architecture == 'x86_64'
+    fail_msg: libvirt_vm currently supports Debian-family x86_64 hosts only.
+
+- name: Check hardware virtualization
+  ansible.builtin.stat:
+    path: /dev/kvm
+  register: libvirt_vm_kvm
+
+- name: Require KVM
+  ansible.builtin.assert:
+    that: libvirt_vm_kvm.stat.exists
+    fail_msg: /dev/kvm is missing; enable VT-x/AMD-V in the firmware.
+
+- name: Select the guests of this hypervisor
+  ansible.builtin.set_fact:
+    libvirt_vm_names: >-
+      {{ (groups['vms'] | default([]) | map('extract', hostvars)
+      | selectattr('vm_hypervisor', 'defined') | selectattr('vm_hypervisor', 'equalto', inventory_hostname)
+      | map(attribute='inventory_hostname') | list)
+      | select('match', '^' ~ (libvirt_vm_only | regex_escape) ~ '$' if libvirt_vm_only else '') | list }}
+
+- name: Check the IOMMU for PCI passthrough
+  ansible.builtin.find:
+    paths: /sys/kernel/iommu_groups
+    file_type: directory
+  register: libvirt_vm_iommu
+  when: libvirt_vm_names | map('extract', hostvars) | selectattr('vm_hostdevs', 'defined') | list | length > 0
+
+- name: Require the IOMMU for PCI passthrough
+  ansible.builtin.assert:
+    that: libvirt_vm_iommu.matched > 0
+    fail_msg: No IOMMU groups. Boot with intel_iommu=on (or amd_iommu=on) and enable VT-d in the firmware.
+  when: libvirt_vm_iommu is not skipped
+
+- name: Install libvirt and tooling
+  ansible.builtin.apt:
+    name:
+      - qemu-system-x86
+      - libvirt-daemon-system
+      - virtiofsd
+      - cloud-image-utils
+      - python3-libvirt
+      - python3-lxml
+      - nftables
+      - iptables
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Start libvirt
+  ansible.builtin.systemd_service:
+    name: libvirtd
+    enabled: true
+    state: started
+
+- name: Enable IPv4 forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_file: /etc/sysctl.d/90-libvirt-vm.conf
+    reload: true
+
+- name: Define the guest networks
+  community.libvirt.virt_net:
+    command: define
+    name: "{{ net.name }}"
+    xml: "{{ lookup('ansible.builtin.template', 'network.xml.j2') }}"
+  loop: "{{ libvirt_vm_networks }}"
+  loop_control:
+    loop_var: net
+    label: "{{ net.name }}"
+
+- name: Start the guest networks at boot
+  community.libvirt.virt_net:
+    name: "{{ net.name }}"
+    state: active
+    autostart: true
+  loop: "{{ libvirt_vm_networks }}"
+  loop_control:
+    loop_var: net
+    label: "{{ net.name }}"
+
+- name: Create the nftables snippet directory
+  ansible.builtin.file:
+    path: /etc/nftables.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the guest NAT and filter rules
+  ansible.builtin.template:
+    src: 50-libvirt-vm.nft.j2
+    dest: /etc/nftables.d/50-libvirt-vm.nft
+    owner: root
+    group: root
+    mode: "0644"
+    validate: nft -c -f %s
+  notify: Apply VM nftables rules
+
+- name: Install the Docker forward rules unit
+  ansible.builtin.template:
+    src: docker-user.service.j2
+    dest: /etc/systemd/system/math-libvirt-vm-docker-user.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: libvirt_vm_docker_user_rules
+  notify: Restart Docker forward rules
+
+- name: Flush handlers so the network rules exist before the guests start
+  ansible.builtin.meta: flush_handlers
+
+- name: Create the guest image directory
+  ansible.builtin.file:
+    path: "{{ libvirt_vm_images_dir }}/base"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download the cloud image
+  ansible.builtin.get_url:
+    url: "{{ libvirt_vm_cloud_image_url }}"
+    dest: "{{ libvirt_vm_images_dir }}/base/{{ libvirt_vm_cloud_image_url | basename }}"
+    checksum: "{{ libvirt_vm_cloud_image_checksum }}"
+    mode: "0644"
+  when: libvirt_vm_names | length > 0
+
+- name: Provision the guests
+  ansible.builtin.include_tasks: guest.yml
+  loop: "{{ libvirt_vm_names }}"
+  loop_control:
+    loop_var: vm_host
