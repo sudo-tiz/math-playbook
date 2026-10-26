@@ -1,14 +1,26 @@
 ---
-- name: Configure and mount filesystems
+- name: Manage fstab block
+  ansible.builtin.blockinfile:
+    path: "{{ fstab_mounts_file }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK fstab_mounts"
+    block: |
+      {% for item in fstab_mounts_entries %}
+      {{ item.src }} {{ item.path }} {{ item.fstype | default(fstab_mounts_fstype) }} {{ item.opts | default(fstab_mounts_opts) }} {{ item.dump | default(fstab_mounts_dump) }} {{ item.passno | default(fstab_mounts_passno) }}
+      {% endfor %}
+  register: fstab_mounts_block
+
+- name: Reload systemd mount units
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: fstab_mounts_block is changed
+
+- name: Mount filesystems
   ansible.posix.mount:
     src: "{{ item.src }}"
     path: "{{ item.path }}"
     fstype: "{{ item.fstype | default(fstab_mounts_fstype) }}"
     opts: "{{ item.opts | default(fstab_mounts_opts) }}"
-    dump: "{{ item.dump | default(fstab_mounts_dump) }}"
-    passno: "{{ item.passno | default(fstab_mounts_passno) }}"
-    fstab: "{{ fstab_mounts_file }}"
-    state: mounted
+    state: ephemeral
   loop: "{{ fstab_mounts_entries }}"
 
 - name: Set mounted filesystem root permissions
