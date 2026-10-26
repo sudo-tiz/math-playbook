@@ -13,6 +13,8 @@
       tags: [bootstrap, role-fstab_mounts]
     - role: system_timezone
       tags: [bootstrap, role-system_timezone]
+    - role: motd
+      tags: [bootstrap, role-motd]
     - role: msmtp_relay
       tags: [bootstrap, role-msmtp_relay]
     - role: apt_upgrade_helpers

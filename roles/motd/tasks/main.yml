@@ -1,0 +1,20 @@
+---
+- name: Ensure the update-motd.d directory exists
+  ansible.builtin.file:
+    path: /etc/update-motd.d
+    state: directory
+    mode: "0755"
+
+- name: Remove unwanted motd scripts
+  ansible.builtin.file:
+    path: "/etc/update-motd.d/{{ item }}"
+    state: absent
+  loop: "{{ motd_removed_scripts }}"
+
+- name: Install the motd banner script
+  ansible.builtin.template:
+    src: banner.j2
+    dest: "/etc/update-motd.d/{{ motd_script_name }}"
+    owner: root
+    group: root
+    mode: "0755"

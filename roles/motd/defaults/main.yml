@@ -1,0 +1,8 @@
+---
+motd_banner: |-
+  ┏┳┏┓┳┓┳┓┳┳┓
+   ┃┣┫┣┫┃┃┃┃┃
+  ┗┛┛┗┛┗┻┛┻┛┗
+motd_script_name: 1-hostname
+motd_removed_scripts:
+  - 10-uname
