@@ -6,7 +6,7 @@
 
 - name: Install unattended-upgrades
   ansible.builtin.apt:
-    name: unattended-upgrades
+    name: "{{ ['unattended-upgrades'] + (['bsd-mailx'] if unattended_upgrades_mail_to | length > 0 else []) }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
