@@ -1,0 +1,15 @@
+[DEFAULT]
+backend = systemd
+ignoreip = {{ math_fail2ban_ignoreip | join(' ') }}
+bantime = 1h
+findtime = 10m
+maxretry = 5
+bantime.increment = true
+banaction = iptables-multiport
+banaction_allports = iptables-allports
+
+[sshd]
+enabled = true
+port = {{ math_fail2ban_sshd_port }}
+filter = sshd[journalmatch='_SYSTEMD_UNIT=ssh.service']
+banaction = %(banaction_allports)s

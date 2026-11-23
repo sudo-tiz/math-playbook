@@ -1,0 +1,6 @@
+[INCLUDES]
+before = common.conf
+
+[Definition]
+failregex = ^<HOST> - \S+ \[[^\]]+\] "[^"]*" \d{3} \S+ "[^"]*" "(?i:[^"]*(?:{{ math_fail2ban_traefik_user_agent_pattern }})[^"]*)".*$
+ignoreregex =

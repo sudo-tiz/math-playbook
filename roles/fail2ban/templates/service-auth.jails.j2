@@ -1,0 +1,14 @@
+{% for service in math_fail2ban_service_jails %}
+[{{ service.name }}-auth]
+enabled = {{ 'true' if service.enabled | default(false) | bool else 'false' }}
+backend = systemd
+filter = math-services[journalmatch='{{ service.journalmatch }}']
+chain = DOCKER-USER
+banaction = iptables-allports
+protocol = all
+ignoreip = {{ math_fail2ban_service_ignoreip | join(' ') }}
+maxretry = {{ service.maxretry | default(5) }}
+findtime = {{ service.findtime | default('10m') }}
+bantime = {{ service.bantime | default('24h') }}
+
+{% endfor %}

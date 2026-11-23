@@ -17,6 +17,13 @@ system_mail_recipient: admin@example.invalid
 # Overrides of the group_vars/math_servers defaults:
 # larbuste_version: d3aef251e1d1d5ad5078e273d17a03f870001ebf
 # msmtp_relay_from: server@example.invalid
+# Optional service jails; use the actual systemd unit names on the host.
+# math_fail2ban_vaultwarden_enabled: true
+# math_fail2ban_vaultwarden_journalmatch: _SYSTEMD_UNIT=vaultwarden.service
+# math_fail2ban_traefik_enabled: true
+# math_fail2ban_traefik_journalmatch: _SYSTEMD_UNIT=traefik.service
+# math_fail2ban_service_jails:
+#   - { name: jellyfin, enabled: true, journalmatch: "_SYSTEMD_UNIT=jellyfin.service" }
 fstab_mounts_entries:
   - src: /dev/disk/by-label/MEDIA
     path: "{{ media_path }}"

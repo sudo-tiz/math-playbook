@@ -14,14 +14,28 @@
     daemon_reload: true
   when: fstab_mounts_block is changed
 
+- name: Resolve device symlinks for ephemeral mounts
+  ansible.builtin.command:
+    argv: [readlink, -f, --, "{{ item.src }}"]
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  loop: "{{ fstab_mounts_entries }}"
+  loop_control:
+    label: "{{ item.src }}"
+  when: item.src.startswith('/dev/')
+  register: fstab_mounts_resolved_sources
+
 - name: Mount filesystems
   ansible.posix.mount:
-    src: "{{ item.src }}"
-    path: "{{ item.path }}"
-    fstype: "{{ item.fstype | default(fstab_mounts_fstype) }}"
-    opts: "{{ item.opts | default(fstab_mounts_opts) }}"
+    src: "{{ item.1.stdout if (item.1.rc | default(1)) == 0 and (item.1.stdout | default('')) else item.0.src }}"
+    path: "{{ item.0.path }}"
+    fstype: "{{ item.0.fstype | default(fstab_mounts_fstype) }}"
+    opts: "{{ item.0.opts | default(fstab_mounts_opts) }}"
     state: ephemeral
-  loop: "{{ fstab_mounts_entries }}"
+  loop: "{{ fstab_mounts_entries | zip(fstab_mounts_resolved_sources.results | default([])) | list }}"
+  loop_control:
+    label: "{{ item.0.path }}"
 
 - name: Set mounted filesystem root permissions
   ansible.builtin.file:

@@ -13,6 +13,8 @@
       tags: [bootstrap, role-fstab_mounts]
     - role: system_timezone
       tags: [bootstrap, role-system_timezone]
+    - role: fail2ban
+      tags: [bootstrap, role-fail2ban]
     - role: motd
       tags: [bootstrap, role-motd]
     - role: msmtp_relay

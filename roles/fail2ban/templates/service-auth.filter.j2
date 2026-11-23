@@ -1,0 +1,11 @@
+[INCLUDES]
+before = common.conf
+
+[Definition]
+_groupsre = (?:(?:,?\s*"\w+":(?:"[^"]+"|\w+))*)
+failregex = ^.*{{ '{' }}%(_groupsre)s,?\s*"remoteAddr":"<HOST>"%(_groupsre)s,?\s*"message":"Login failed:
+            ^.*\|(?:Warn|Warning)\|Auth\|Auth-Failure ip <HOST> username .*$
+            ^.*Authentication request for .* has been denied \(IP:\s*"?<HOST>"?\)\.
+            ^.*Failed (?:login|sign-in|OIDC login) attempt.*"ip"\s*:\s*"<HOST>".*$
+            ^.*WebAPI login failure\. Reason: .*?, IP:\s*<ADDR>, username:\s*\S+.*$
+ignoreregex =

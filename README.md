@@ -14,6 +14,7 @@ Roles are idempotent, one concern each, tagged `role-<name>` (`bootstrap` for fi
 | `larbuste` | Neovim, tmux, Zsh, Git, dotfiles | ✅ |
 | `fstab_mounts` | fstab entries (ext4, virtiofs…) | ✅ |
 | `system_timezone` | timezone | ✅ |
+| `fail2ban` | SSH; optional Vaultwarden, Traefik and app-auth bans | ✅ |
 | `msmtp_relay` | `sendmail` via MASH's Exim relay | ✅ |
 | `apt_upgrade_helpers` | apt-listchanges, needrestart, apt-listbugs | ✅ |
 | `unattended_upgrades` | automatic security upgrades | ✅ |

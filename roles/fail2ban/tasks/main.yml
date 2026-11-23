@@ -1,0 +1,156 @@
+---
+- name: Require a Debian-family host
+  ansible.builtin.assert:
+    that: ansible_facts.os_family == 'Debian'
+    fail_msg: fail2ban currently supports Debian-family hosts only.
+
+- name: Install Fail2Ban and journald support
+  ansible.builtin.apt:
+    name: [fail2ban, iptables, python3-systemd]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Ensure Fail2Ban systemd override directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/fail2ban.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: math_fail2ban_docker_jails_enabled | bool
+
+- name: Configure Fail2Ban logging
+  ansible.builtin.template:
+    src: fail2ban.local.j2
+    dest: /etc/fail2ban/fail2ban.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+
+- name: Configure Fail2Ban defaults and SSH jail
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+
+- name: Configure Vaultwarden filter
+  ansible.builtin.template:
+    src: vaultwarden.filter.j2
+    dest: /etc/fail2ban/filter.d/vaultwarden.local
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_vaultwarden_enabled | bool
+  notify: Restart fail2ban
+
+- name: Configure Vaultwarden jail
+  ansible.builtin.template:
+    src: vaultwarden.jail.j2
+    dest: /etc/fail2ban/jail.d/vaultwarden.local
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_vaultwarden_enabled | bool
+  notify: Restart fail2ban
+
+- name: Remove disabled Vaultwarden configuration
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/fail2ban/filter.d/vaultwarden.local
+    - /etc/fail2ban/jail.d/vaultwarden.local
+  when: not (math_fail2ban_vaultwarden_enabled | bool)
+  notify: Restart fail2ban
+
+- name: Configure Traefik bot filter
+  ansible.builtin.template:
+    src: traefik-bots.filter.j2
+    dest: /etc/fail2ban/filter.d/traefik-bots.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_traefik_enabled | bool
+  notify: Restart fail2ban
+
+- name: Configure Traefik bot jail
+  ansible.builtin.template:
+    src: traefik-bots.jail.j2
+    dest: /etc/fail2ban/jail.d/traefik-bots.local
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_traefik_enabled | bool
+  notify: Restart fail2ban
+
+- name: Remove disabled Traefik configuration
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/fail2ban/filter.d/traefik-bots.conf
+    - /etc/fail2ban/jail.d/traefik-bots.local
+  when: not (math_fail2ban_traefik_enabled | bool)
+  notify: Restart fail2ban
+
+- name: Configure application authentication filter
+  ansible.builtin.template:
+    src: service-auth.filter.j2
+    dest: /etc/fail2ban/filter.d/math-services.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_service_jails | length > 0
+  notify: Restart fail2ban
+
+- name: Configure application authentication jails
+  ansible.builtin.template:
+    src: service-auth.jails.j2
+    dest: /etc/fail2ban/jail.d/math-services.local
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_service_jails | length > 0
+  notify: Restart fail2ban
+
+- name: Remove application authentication configuration when unused
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/fail2ban/filter.d/math-services.conf
+    - /etc/fail2ban/jail.d/math-services.local
+  when: math_fail2ban_service_jails | length == 0
+  notify: Restart fail2ban
+
+- name: Ensure Fail2Ban starts after Docker
+  ansible.builtin.template:
+    src: docker-ordering.conf.j2
+    dest: /etc/systemd/system/fail2ban.service.d/docker-ordering.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_docker_jails_enabled | bool
+  notify: Restart fail2ban
+
+- name: Remove Docker ordering override when no Docker jails are enabled
+  ansible.builtin.file:
+    path: /etc/systemd/system/fail2ban.service.d/docker-ordering.conf
+    state: absent
+  when: not (math_fail2ban_docker_jails_enabled | bool)
+  notify: Restart fail2ban
+
+- name: Validate Fail2Ban configuration
+  ansible.builtin.command: fail2ban-client -t
+  changed_when: false
+
+- name: Enable and start Fail2Ban
+  ansible.builtin.systemd_service:
+    name: fail2ban
+    enabled: true
+    state: started

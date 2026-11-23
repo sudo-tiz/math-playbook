@@ -1,0 +1,12 @@
+[vaultwarden]
+enabled = true
+port = 80,443,8080,8443
+chain = DOCKER-USER
+banaction = iptables-allports
+protocol = all
+ignoreip = {{ math_fail2ban_service_ignoreip | join(' ') }}
+maxretry = 5
+bantime = 14400
+findtime = 14400
+backend = systemd
+filter = vaultwarden[journalmatch='{{ math_fail2ban_vaultwarden_journalmatch }}']
