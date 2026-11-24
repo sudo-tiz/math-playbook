@@ -2,5 +2,5 @@
 before = common.conf
 
 [Definition]
-failregex = ^<HOST> - \S+ \[[^\]]+\] "(?:GET|HEAD) /[^" ]*(?i:(?:\.env(?:[./?]|(?= )|$)|/\.git(?:/|(?= )|$)|/\.svn(?:/|(?= )|$)|/\.hg(?:/|(?= )|$)|/\.aws(?:/|(?= )|$)|wp-(?:admin|login)(?:/|[.?]|(?= )|$)|phpmyadmin(?:/|[.?]|(?= )|$)|etc/|\.pkrvars\.hcl(?:[?/]|(?= )|$)|\.(?:sql(?:\.gz)?|sqlite(?:3)?|bak|backup|old|orig|zip|tgz|tar(?:\.gz)?)(?:[?/]|(?= )|$)))[^" ]* HTTP/[^"]+" 404 \S+ .*$
+failregex = ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "(?:GET|HEAD) /[^" ]*(?i:(?:\.env(?:[./?]|(?= )|$)|\.git(?:/|(?= )|$)|\.svn(?:/|(?= )|$)|\.hg(?:/|(?= )|$)|\.aws(?:/|(?= )|$)|wp-(?:admin|login)(?:/|[.?]|(?= )|$)|phpmyadmin(?:/|[.?]|(?= )|$)|etc/|\.pkrvars\.hcl(?:[?/]|(?= )|$)|\.(?:sql(?:\.gz)?|sqlite(?:3)?|bak|backup|old|orig|zip|tgz|tar(?:\.gz)?)(?:[?/]|(?= )|$)))[^" ]* HTTP/[^"]+" 404 \S+ .*$
 ignoreregex =
