@@ -1,6 +1,8 @@
 ---
 dns_resolver_nameservers:
-  - 9.9.9.9
-  - 149.112.112.112
+  - 94.140.14.14
+  - 94.140.14.15
+  - 86.54.11.1
+  - 86.54.11.201
 dns_resolver_search_domains: []
 dns_resolver_immutable: false
