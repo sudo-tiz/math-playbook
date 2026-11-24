@@ -1,0 +1,11 @@
+[traefik-probes]
+enabled = true
+chain = DOCKER-USER
+banaction = iptables-allports
+protocol = all
+ignoreip = {{ math_fail2ban_service_ignoreip | join(' ') }}
+maxretry = 5
+bantime = 24h
+findtime = 2m
+backend = systemd
+filter = traefik-probes[journalmatch='{{ math_fail2ban_traefik_journalmatch }}']
