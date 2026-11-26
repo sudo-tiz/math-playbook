@@ -6,7 +6,7 @@ math_fail2ban_vaultwarden_journalmatch: _SYSTEMD_UNIT=vaultwarden.service
 math_fail2ban_traefik_enabled: false
 math_fail2ban_traefik_journalmatch: _SYSTEMD_UNIT=traefik.service
 math_fail2ban_traefik_user_agent_pattern: >-
-  Googlebot|GoogleOther|Bingbot|DuckDuckBot|YandexBot|Baiduspider|Applebot|GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|CCBot|Bytespider|Meta-ExternalAgent|Meta-ExternalFetcher|PerplexityBot|Amazonbot|cohere-ai|RootEvidence|AgentTrustBot
+  Googlebot|GoogleOther|Bingbot|DuckDuckBot|YandexBot|Baiduspider|Applebot|GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|CCBot|Bytespider|Meta-ExternalAgent|Meta-ExternalFetcher|PerplexityBot|Amazonbot|cohere-ai|RootEvidence|AgentTrustBot|aiohttp|Go-http-client|python-requests|python-httpx|python-urllib|rawgrab|curl
 math_fail2ban_service_jails: []
 math_fail2ban_service_ignoreip: >-
   {{ math_fail2ban_ignoreip + ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10', 'fc00::/7'] }}

@@ -108,6 +108,26 @@
   when: math_fail2ban_traefik_enabled | bool
   notify: Restart fail2ban
 
+- name: Configure Traefik authentication filter
+  ansible.builtin.template:
+    src: traefik-auth.filter.j2
+    dest: /etc/fail2ban/filter.d/traefik-auth.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_traefik_enabled | bool
+  notify: Restart fail2ban
+
+- name: Configure Traefik authentication jail
+  ansible.builtin.template:
+    src: traefik-auth.jail.j2
+    dest: /etc/fail2ban/jail.d/traefik-auth.local
+    owner: root
+    group: root
+    mode: "0644"
+  when: math_fail2ban_traefik_enabled | bool
+  notify: Restart fail2ban
+
 - name: Remove disabled Traefik configuration
   ansible.builtin.file:
     path: "{{ item }}"
@@ -117,6 +137,8 @@
     - /etc/fail2ban/jail.d/traefik-bots.local
     - /etc/fail2ban/filter.d/traefik-probes.conf
     - /etc/fail2ban/jail.d/traefik-probes.local
+    - /etc/fail2ban/filter.d/traefik-auth.conf
+    - /etc/fail2ban/jail.d/traefik-auth.local
   when: not (math_fail2ban_traefik_enabled | bool)
   notify: Restart fail2ban
 

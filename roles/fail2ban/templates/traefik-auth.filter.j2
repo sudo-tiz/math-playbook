@@ -1,0 +1,8 @@
+[INCLUDES]
+before = common.conf
+
+[Definition]
+failregex = ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "\S+ [^"]+" 401\b .*$
+            ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "POST [^"]*loginFailed=true[^"]*" 200 \S+ .*$
+            ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "POST /identity/connect/token HTTP/[12]\.[01]" 400 \S+ .*$
+ignoreregex =

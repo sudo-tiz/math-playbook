@@ -4,4 +4,4 @@ before = common.conf
 [Definition]
 {% set nginx_badbots = lookup('file', role_path ~ '/files/traefik-badbots.regex') | trim | replace('\n', '|') %}
 failregex = ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "[^"]*" \d{3} \S+ "[^"]*" "(?i:[^"]*(?:{{ math_fail2ban_traefik_user_agent_pattern }}|{{ nginx_badbots }})[^"]*)".*$
-ignoreregex =
+ignoreregex = ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "[^"]*" \d{3} \S+ "[^"]*" "(?i:[^"]*(?:Nextcloud|immich-android|AntennaPod|SM-A576B|DAVx5|Nextcloud Server Crawler|Blackbox Exporter|PhoneTrack|Bitwarden_Mobile)[^"]*)".*$

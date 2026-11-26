@@ -2,5 +2,7 @@
 before = common.conf
 
 [Definition]
-failregex = ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "(?:GET|HEAD) /[^" ]*(?i:(?:\.env(?:[./?]|(?= )|$)|\.git(?:/|(?= )|$)|\.svn(?:/|(?= )|$)|\.hg(?:/|(?= )|$)|\.aws(?:/|(?= )|$)|wp-(?:admin|login)(?:/|[.?]|(?= )|$)|phpmyadmin(?:/|[.?]|(?= )|$)|etc/|\.pkrvars\.hcl(?:[?/]|(?= )|$)|\.(?:sql(?:\.gz)?|sqlite(?:3)?|bak|backup|old|orig|zip|tgz|tar(?:\.gz)?)(?:[?/]|(?= )|$)))[^" ]* HTTP/[^"]+" 404 \S+ .*$
+failregex = ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "(?:GET|HEAD) /[^" ]*(?i:(?:\.env(?:[./?]|(?= )|$)|\.git(?:/|(?= )|$)|\.svn(?:/|(?= )|$)|\.hg(?:/|(?= )|$)|\.aws(?:/|(?= )|$)|\.azure(?:[/?]|(?= )|$)|\.docker(?:[/?]|(?= )|$)|\.s3cfg(?:[/?]|(?= )|$)|\.ht(?:access|passwd)(?:[/?]|(?= )|$)|wp-(?:admin|login|content)(?:/|[.?]|(?= )|$)|phpmyadmin(?:/|[.?]|(?= )|$)|docker-compose(?:\.[^/]+)?(?:[/?]|(?= )|$)|config\.(?:json|ya?ml|js|php|ini|xml|txt)(?:[/?]|(?= )|$)|database(?:\.[^/]+)?(?:[/?]|(?= )|$)|credentials(?:\.[^/]+)?(?:[/?]|(?= )|$)|api[_-]?keys?(?:\.[^/]+)?(?:[/?]|(?= )|$)|secrets?(?:\.[^/]+)?(?:[/?]|(?= )|$)|DS_Store(?:[/?]|(?= )|$)|etc/|\.pkrvars\.hcl(?:[?/]|(?= )|$)|\.(?:sql(?:\.gz)?|sqlite(?:3)?|bak|backup|old|orig|zip|tgz|tar(?:\.gz)?)(?:[?/]|(?= )|$)))[^" ]* HTTP/[^"]+" 404 \S+ .*$
+            ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "(?:GET|HEAD) /(?:[^" ]*/)?[^/"? ]+(?i:\.php)(?:[?/]|(?= )|$)[^" ]* HTTP/[^"]+" 404 \S+ .*$
+            ^%(__prefix_line)s<HOST> - \S+ \[[^\]]+\] "\S+ / HTTP/[^\"]+" 404 \S+ .*$
 ignoreregex =
